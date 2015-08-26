@@ -1,0 +1,131 @@
+<html>
+<head>
+<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" />
+<link rel="stylesheet" type="text/css" href="/static/assets/css/screen.css?v=23c118cee3" />
+<script>
+
+var ws = new WebSocket('ws://localhost:7070/controlcenter');
+
+function flush_online_list(list) {
+    online_list = document.getElementById('online');
+    for (var i in list) {
+        online_list.innerHTML = online_list.innerHTML +
+        "<a href='javascript:void(0)' class='list-group-item' id=" + list[i] + "> " + list[i] + "</a>";
+    }
+}
+
+function join_online_list(id) {
+    online_list = document.getElementById('online');
+    console.debug(id);
+    console.debug(id.indexOf("Bot"));
+    if (id.indexOf("Bot") > 0) {
+        online_list.innerHTML = online_list.innerHTML +
+        "<a href='/image/" + id + ".png' class='list-group-item' id=" + id + "> " + id + "</a>";
+    } else {
+        online_list.innerHTML = online_list.innerHTML +
+        "<a href='javascript:void(0)' class='list-group-item' id=" + id + "> " + id + "</a>";
+    }
+}
+
+function pop_online_list(id) {
+    li = document.getElementById(id);
+    li.parentNode.removeChild(li);
+}
+
+ws.onmessage = function(event) {
+    var table=document.getElementById('message_table');
+    console.debug(event.data);
+    var data = eval('(' + event.data + ')');
+
+    if (data["Mode"] == "Online") {
+        flush_online_list(eval('(' + data["Msg"] + ')'));
+    } else if (data["Mode"] == "Join") {
+        join_online_list(data["Msg"]);
+        table.insertRow().insertCell().innerHTML = "用户 " + data["Msg"] + " 进入";
+    } else if (data["Mode"] == "Left") {
+        pop_online_list(data["Msg"]);
+        table.insertRow().insertCell().innerHTML = "用户 " + data["Msg"] + " 离开";
+    } else if (data["Mode"] == "System") {
+        table.insertRow().insertCell().innerHTML = "系统消息: " + data["Msg"];
+    } else if (data["Mode"] == "Message") {
+        var command = eval('(' + data["Msg"] + ')');
+        console.debug(command["From"]);
+        console.debug(command["Msg"]);
+        table.insertRow().insertCell().innerHTML = "用户 " + command["From"] + "对你说: " + command["Msg"];
+    } else if (data["Mode"] == "Speak") {
+        var command = eval('(' + data["Msg"] + ')');
+        console.debug(command["From"]);
+        console.debug(command["Msg"]);
+        table.insertRow().insertCell().innerHTML = "用户 " + command["From"] + "说: " + command["Msg"];
+    }
+};
+
+function send() {
+    ws.send('{ "Recipient": "' + document.getElementById('recipient').value + 
+        '", "Message" : "' + document.getElementById('usermsg').value + '"}');
+    document.getElementById('usermsg').value = '';
+}
+
+</script>
+</head>
+<body class="home-template">
+  <nav class="main-navigation">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="panel panel-primary">
+            <div class="panel panel-heading">当前在线</div>
+            <div class="panel-body">
+              <div class="list-group" id="online">
+              {% for m in machines.keys() %}
+                <a href="/image/{{ m }}.png" class="list-group-item"> Bot {{ m }}</a>
+              {% end %}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="panel panel-default" id="message_screen">
+            <table class="table" id="message_table">
+            </table>
+          </div>
+          <form class="form-horizontal">
+            <div class="form-group">
+              <label for="inputRecipient" class="col-sm-2 control-label">发送给</label>
+              <div class="col-sm-6">
+                <input class="form-control" id="recipient" placeholder="recipient" value="all">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="inputRecipient" class="col-sm-2 control-label">消息</label>
+              <div class="col-sm-6">
+                <input class="form-control" id="usermsg" placeholder="message" value="">
+              </div>
+            </div>
+          </form>
+          <div class="form-group">
+            <button onclick='send()'>Send</button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+<table id='message'></table>
+<script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+<script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<footer class="main-footer"> 
+   <div class="container"> 
+    <div class="row"> 
+     <div class="col-sm-0 col-md-3"></div> 
+     <div class="col-sm-12 col-md-7"> 
+      <h5>&copy; Copyright 2014-2015 <a href="http://plusplus7.com">plusplus7.com</a> | Designer &amp; Author: plusplus7 | Running on Aliyun ECS </h5> 
+     </div> 
+     <div class="col-sm-0 col-md-2"></div> 
+    </div> 
+   </div> 
+  </footer> 
+</body>
+</html>

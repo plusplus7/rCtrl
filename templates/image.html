@@ -1,0 +1,12 @@
+<html>
+<body onload='setInterval("show()", 1000)'>
+<script type="text/javascript">
+function show()
+{
+    var img = document.getElementById("my_screen");
+    img.src = "/static/{{ machine_id }}.png?rnd=" + Math.random();
+}
+</script>
+    <img id="my_screen" src="/static/{{ machine_id }}.png?rnd=0"></img>
+</body>
+</html>
